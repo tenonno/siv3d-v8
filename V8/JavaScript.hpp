@@ -20,7 +20,7 @@
 #include "include/libplatform/libplatform.h"
 #include "include/v8.h"
 
-
+#include <sstream>
 
 
 
@@ -37,10 +37,14 @@ private:
 	v8::Platform *_platform = nullptr;
 
 
+	std::unique_ptr<v8::Platform> _aaa;
+
+
 
 	v8::Local<v8::Context> _context;
 
-	std::unique_ptr<C_A> _scope;
+	std::unique_ptr<Instance<v8::HandleScope>> _scope;
+
 
 	A2 _global;
 
@@ -86,6 +90,9 @@ public:
 		return root;
 	}
 	*/
+	
+
+
 
 	void initialize()
 	{
@@ -99,9 +106,15 @@ public:
 
 		auto isolate = v8::Isolate::New(create_params);
 
-
-
 		isolate->Enter();
+
+
+
+
+		using wss = std::wstringstream;
+		const auto this_id = static_cast<wss &>(wss() << std::this_thread::get_id()).str();
+		Println(L"thread-id: ", this_id);
+
 
 
 		// Isolate を現在のスレッドに割り当てる
@@ -112,8 +125,11 @@ public:
 
 
 
-		this->_scope = std::make_unique<C_A>(isolate);
+		this->_scope = std::make_unique<Instance<v8::HandleScope>>(isolate);
+		
 
+
+		//this->___scope = v8::HandleScope(isolate);
 
 		this->_isolate = isolate;
 
@@ -149,7 +165,7 @@ public:
 
 
 		globalS3d->Set(
-			ToStringV8(L"clearPrint", isolate),
+			ToStringV8(L"clearPrint"),
 			v8::FunctionTemplate::New(isolate,
 				[](const v8::FunctionCallbackInfo<v8::Value> &args) -> void
 		{
@@ -159,12 +175,14 @@ public:
 		}));
 
 		this->globalObject = global;
+		this->siv3d = globalS3d;
 
 		g::isolate = isolate;
 
 	}
 
 	v8::Local<v8::ObjectTemplate> globalObject;
+	v8::Local<v8::ObjectTemplate> siv3d;
 
 	A2 __GLOBAL;
 
@@ -190,8 +208,14 @@ public:
 
 		V8::InitializeICU();
 		V8::InitializeExternalStartupData("./");
-		this->_platform = platform::CreateDefaultPlatform();
-		V8::InitializePlatform(this->_platform);
+		
+		// this->_platform = v8::platform::CreateDefaultPlatform();
+		
+		
+		this->_aaa.reset(v8::platform::CreateDefaultPlatform());
+
+		
+		V8::InitializePlatform(this->_aaa.get());
 		V8::Initialize();
 
 		this->initialize();
@@ -203,8 +227,8 @@ public:
 	{
 
 
-
-		v8::Local<v8::Context> context1 = v8::Context::New(this->isolate, nullptr,this->globalObject);
+		// JS を実行するコンテキストを生成する
+		v8::Local<v8::Context> context1 = v8::Context::New(this->isolate, nullptr, this->globalObject);
 
 
 		context1->Enter();
@@ -237,14 +261,15 @@ public:
 
 		//isolate->Enter();
 
-		Local<v8::String> sourcev8 = ToStringV8(source, this->isolate);
+		Local<v8::String> sourcev8 = ToStringV8(source);
 
 
 		//	const auto isolate = Isolate::GetCurrent();
 
 		Local<Context> context = this->context;//Context::New(isolate);
 		
-		v8::Context::Scope context_scope(context);
+		
+		// v8::Context::Scope context_scope(context);
 
 		//const auto context = isolate->GetCurrentContext();
 
@@ -257,6 +282,7 @@ public:
 
 		// Compile the script and check for errors.
 		Local<v8::Script> compiled_script;
+
 
 
 		if (!v8::Script::Compile(context, sourcev8).ToLocal(&compiled_script)) {
@@ -358,7 +384,8 @@ public:
 
 		V8::Dispose();
 		V8::ShutdownPlatform();
-		delete this->platform;
+		
+		// delete this->platform;
 
 	}
 

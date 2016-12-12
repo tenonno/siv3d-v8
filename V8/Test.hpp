@@ -196,6 +196,14 @@ public:
 	}
 
 
+	void set(const s3d::String &key, const v8::Local<v8::Value> &v) {
+
+
+		this->value->ToObject()->Set(ToStringV8(key), v);
+
+
+	}
+
 
 
 	template <class ... Args>
@@ -209,6 +217,9 @@ public:
 
 		// CL(*this->value);
 			
+		// GetCurrent: 現在のスレッドの Isolate を取得する
+		// GetCurrentContext: 実行中のコンテキストを取得する
+
 		v8::Local<v8::Context> context = Isolate::GetCurrent()->GetCurrentContext();
 		
 	

@@ -115,7 +115,7 @@ inline v8::Local<v8::Boolean> ToBooleanV8(const bool value)
 inline v8::Local<v8::String> ToStringV8(const s3d::String &string)
 {
 
-	const auto isolate = g::isolate; //Isolate::GetCurrent();
+	const auto isolate = v8::Isolate::GetCurrent();
 
 
 	return v8::String::NewFromTwoByte(
@@ -159,50 +159,7 @@ int _tmain(int argc, _TCHAR* argv[])
 */
 
 
-inline v8::Local<v8::String> ToStringV8(const s3d::String &string, Isolate *isolate)
-{
 
-	return v8::String::NewFromTwoByte(
-		isolate,
-		(const uint16 *)string.c_str()
-	);
-
-	/*
-	MessageBox::Show(string);
-	return v8::String::NewFromTwoByte(
-		isolate,
-		(const uint16 *)string.narrow().c_str()
-	);
-	*/
-
-	/*
-	auto a = string.c_str();
-
-
-	return v8::String::NewFromUtf8(
-		isolate,
-		ConvertUnicodeToAnsi(const_cast<wchar_t *>(a))
-	);
-	*/
-
-	/*
-	string.narrow()
-	wchar_t buff[300] = L"Something non-ASCII ÆØÅ here";
-	char cbuff[600];
-	wcstombs(cbuff, buff, wcslen(buff));
-	*/
-
-	//return v8::String::NewFromUtf8(isolate, (const char *)cbuff, v8::String::kNormalString, wcslen(buff));
-
-//	return v8::String::NewFromUtf8(isolate, string.narrow().c_str(), );
-
-
-	/*
-	return v8::String::NewFromTwoByte(
-		isolate,
-		reinterpret_cast<const uint16 *>(string.c_str()));
-		*/
-}
 
 #pragma warning(disable : 4996)
 
@@ -414,17 +371,9 @@ namespace jsiv8
 #include "Test.hpp"
 
 
-class C_A
-{
-	v8::HandleScope scope;
-public:
-	C_A(Isolate *isolate) : scope(isolate)
-	{
-
-	}
-};
 
 
+/*
 class C_B
 {
 	v8::Context::Scope scope;
@@ -434,52 +383,11 @@ public:
 
 	}
 };
-
-#include "JavaScript.hpp"
-
-
-v8::Local<v8::Promise::Resolver> resolver;
-
-
-void AAAAA(const v8::FunctionCallbackInfo<v8::Value> &args)
-{
-	args.GetReturnValue().Set(resolver->GetPromise());
-}
-
-/*
-
-struct UPDATE
-{
-
-	void(*aaa)(v8::Local<v8::Value>);
-
-	v8::Local<v8::Promise::Resolver> resolver;
-
-	void a(v8::FunctionCallbackInfo<v8::Value> &args)
-	{
-		const auto isolate = args.GetIsolate();
-
-
-		MessageBox::Show(L"1");
-
-		auto promise = v8::Promise::New(args.GetIsolate());
-
-		this->resolver = Promise::Resolver::New(args.GetIsolate());
-
-		this->aaa = &this->resolver->Resolve;//(ToBooleanV8(true));
-
-		args.GetReturnValue().Set(resolver->GetPromise());//->
-
-	}
-
-};
-
 */
-
-
 
 #include <future>
 
+/*
 v8::Local<v8::Promise::Resolver> PR;
 
 std::future<void> UCB;
@@ -511,7 +419,60 @@ void BBB(const v8::FunctionCallbackInfo<v8::Value> &args)
 	args.GetReturnValue().Set(PR->GetPromise());
 
 }
+*/
 
+#include <sstream>
+
+
+
+template<class T>
+class Instance
+{
+
+	T instance;
+
+
+public:
+
+	template<class ...Types>
+	Instance(Types&&... args) : instance(std::forward<Types>(args)...)
+	{
+
+	}
+
+};
+
+
+
+#include "JavaScript.hpp"
+
+
+
+
+
+
+
+
+
+
+
+v8::Persistent<v8::Promise::Resolver> pvv;
+
+void PPP(const v8::FunctionCallbackInfo<v8::Value> &args)
+{
+
+	const auto isolate = args.GetIsolate();
+
+	auto resolver = Promise::Resolver::New(isolate);
+	
+	pvv.Reset(isolate, resolver);
+
+	v8::Local<v8::Promise::Resolver> local = v8::Local<v8::Promise::Resolver>::New(isolate, pvv);
+
+
+	args.GetReturnValue().Set(local->GetPromise());
+
+}
 
 
 
@@ -532,8 +493,6 @@ void Main()
 
 	//	js.root()[L"siv3d"] = jsiv8::JS_Object();
 
-
-
 	const auto js_system = v8::ObjectTemplate::New(js.isolate);
 
 	js.globalObject->Set(
@@ -541,54 +500,13 @@ void Main()
 		js_system);
 
 
-	//	v8::Promise::Resolver::New(js.context);
 
-
-		/*
-		v8::Isolate* isolate = v8::Isolate::GetCurrent();
-		v8::HandleScope scope(isolate);
-		*/
-		/*
-		js_system->Set(
-			ToStringV8(L"update"),
-			v8::FunctionTemplate::New(js.isolate, AAAAA));
-			*/
 
 
 	js_system->Set(
 		ToStringV8(L"update"),
-		v8::FunctionTemplate::New(js.isolate,
-			BBB));
+		v8::FunctionTemplate::New(js.isolate, PPP));
 
-	/*
-	js_system->Set(
-		ToStringV8(L"update"),
-		v8::FunctionTemplate::New(js.isolate,
-			[](const v8::FunctionCallbackInfo<v8::Value> &args) -> void
-	{
-
-		const auto isolate = args.GetIsolate();
-
-
-		// MessageBox::Show(L"1");
-
-
-		auto promise = v8::Promise::New(args.GetIsolate());
-
-
-		auto resolver = Promise::Resolver::New(args.GetIsolate());
-
-		PR = resolver;
-
-		// resolver->
-
-		// aaa = &resolver->Resolve;//(ToBooleanV8(true));
-
-		args.GetReturnValue().Set(resolver->GetPromise());
-
-
-	}));
-	*/
 
 
 	const auto source = TextReader(L"test.js").readAll();
@@ -596,26 +514,43 @@ void Main()
 
 
 
+
 	// v8::V8::TerminateExecution(js.isolate);
-
-
 	// auto func = v8::Local<v8::Promise>::Cast(js.global()[L"system"][L"update"].value);
-
 	// CL(js.global()[L"system"][L"update"].value->IsPromise());
 	// func->Resolve(ToBooleanV8(false));
 	// PR->Resolve(ToBooleanV8(true));
 
+
+
+
 	js.global()[L"siv3d"][L"main"](L"test");
+
+
 
 	while (System::Update())
 	{
 
 
+		// ClearPrint();
 
-		if (ucb)
-		{
-			ucb = false;
-			UCB.get();
+
+		if (!pvv.IsEmpty() && !(System::FrameCount() % 10)) {
+
+
+			const auto aa = v8::Local<v8::Promise::Resolver>::New(js.isolate, pvv);
+
+			js.global()[L"siv3d"].set(L"frameCount", ToNumberV8(System::FrameCount()));
+
+			aa->Resolve(ToBooleanV8(true));
+
+			//v8::Undefined(js.isolate));
+			Isolate::GetCurrent()->RunMicrotasks();
+
+			//Println(L"Resolve", aa.IsEmpty());
+
+
+			//pvv.Reset();
 		}
 
 
