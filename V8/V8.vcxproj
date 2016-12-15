@@ -284,6 +284,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CV8Initializer.hpp" />
+    <ClInclude Include="js_function.hpp" />
+    <ClInclude Include="js_object.hpp" />
+    <ClInclude Include="Template.hpp" />
     <ClInclude Include="JavaScript.hpp" />
     <ClInclude Include="Test.hpp" />
   </ItemGroup>

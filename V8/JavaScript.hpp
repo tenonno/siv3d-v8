@@ -23,6 +23,9 @@
 #include <sstream>
 
 
+#include "js_object.hpp"
+#include "js_function.hpp"
+#include "Template.hpp"
 
 class JavaScript
 {
@@ -153,26 +156,26 @@ public:
 
 		v8::Local<v8::ObjectTemplate> globalS3d = v8::ObjectTemplate::New(this->isolate);
 
+		/*
 		global->Set(
 			v8::String::NewFromUtf8(this->isolate, "siv3d", v8::NewStringType::kNormal)
 			.ToLocalChecked(),
 			globalS3d);
 
-		globalS3d->Set(
-			v8::String::NewFromUtf8(this->isolate, "println", v8::NewStringType::kNormal)
-			.ToLocalChecked(),
-			v8::FunctionTemplate::New(isolate, test));
+		*/
 
 
-		globalS3d->Set(
-			ToStringV8(L"clearPrint"),
-			v8::FunctionTemplate::New(isolate,
-				[](const v8::FunctionCallbackInfo<v8::Value> &args) -> void
-		{
 
-			s3d::ClearPrint();
 
-		}));
+
+
+
+
+
+
+
+
+
 
 		this->globalObject = global;
 		this->siv3d = globalS3d;
@@ -181,21 +184,18 @@ public:
 
 	}
 
+
+	JS_Template define()
+	{
+		return JS_Template(this->globalObject);
+	}
+
+
 	v8::Local<v8::ObjectTemplate> globalObject;
 	v8::Local<v8::ObjectTemplate> siv3d;
 
 	A2 __GLOBAL;
 
-
-	inline A2 __GET_GLOBAL__()
-	{
-
-		jsiv8::GET = true;
-
-		return this->__GLOBAL.value;
-	}
-
-	__declspec(property(get = __GET_GLOBAL__)) A2 __GET__;
 
 
 	A2 global()

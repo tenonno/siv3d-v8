@@ -35,43 +35,6 @@ public:
 using namespace v8;
 
 
-/*
-
-Handle<v8::String> ReadFile(s3d::String fileName) {
-
-
-
-	TextReader reader(fileName);
-
-	const s3d::String s = reader.readAll();
-
-
-	FILE* file = fopen(name, "r");
-	if (file == NULL) return Handle<v8::String>();
-
-	fseek(file, 0, SEEK_END);
-	int size = ftell(file);
-	rewind(file);
-
-	char* chars = new char[size + 1];
-	chars[size] = '\0';
-	for (int i = 0; i < size;) {
-		int read = fread(&chars[i], 1, size - i, file);
-		i += read;
-	}
-
-	fclose(file);
-
-
-		Handle<v8::String>::New(
-
-	Handle<v8::String> result = v8::String::NewFromUtf8(chars, size);
-	delete[] chars;
-	return result;
-}
-
-*/
-
 
 template <class ... Args>
 inline void CL(const Args& ... args)
@@ -131,34 +94,6 @@ inline v8::Local<v8::String> ToStringV8(const s3d::String &string)
 #include <windows.h>
 
 #undef MessageBox
-
-/*
-Local<String> CreateString(Isolate* isolate, wchar_t* pValue)
-{
-	return String::NewFromTwoByte(isolate, reinterpret_cast<const uint16_t*>(pValue));
-}
-*/
-
-
-/*
-
-int _tmain(int argc, _TCHAR* argv[])
-{
-	Isolate* isolate = Isolate::GetCurrent();
-	HandleScope handle_scope(isolate);
-	Handle<Context> context = Context::New(isolate);
-	Context::Scope context_scope(context);
-	CString temp = "'你'+'好'";
-	String::Utf8Value  mergeResult(ExecuteJs(isolate, CreateString(temp.GetBuffer())));
-	wchar_t* finalResult = ConvertAnsiToUnicode(*mergeResult);
-	cout << finalResult << endl;
-	return 0;
-}
-
-
-*/
-
-
 
 
 #pragma warning(disable : 4996)
@@ -247,43 +182,22 @@ s3d::String FormatV8(const v8::Local<v8::Value> &value)
 
 	}
 
+	if (value->IsNull()) {
+		return L"null";
+	}
 
 	return L"?";
 
 }
 
 
-void test(const v8::FunctionCallbackInfo<v8::Value> &args)
-{
-
-	int size = args.Length();
-
-	s3d::String result;
-
-	for (int i = 0; i < size; ++i)
-	{
-
-
-		result += FormatV8(args[i]);
-
-	}
-
-
-
-	// MessageBox::Show(result);
-
-	Println(result);
-
-
-	args.GetReturnValue().SetUndefined();
-
-}
-
 
 namespace jsiv8
 {
 
 	bool GET = false;
+
+
 
 
 	class JS_Object
@@ -371,20 +285,6 @@ namespace jsiv8
 #include "Test.hpp"
 
 
-
-
-/*
-class C_B
-{
-	v8::Context::Scope scope;
-public:
-	C_B(v8::Local<v8::Context> isolate) : scope(isolate)
-	{
-
-	}
-};
-*/
-
 #include <future>
 
 /*
@@ -450,10 +350,16 @@ public:
 
 
 
+class _V8_Promise
+{
+	v8::Persistent<v8::Promise::Resolver> _resolver;
+
+public:
 
 
 
 
+};
 
 
 v8::Persistent<v8::Promise::Resolver> pvv;
@@ -463,21 +369,102 @@ void PPP(const v8::FunctionCallbackInfo<v8::Value> &args)
 
 	const auto isolate = args.GetIsolate();
 
-	auto resolver = Promise::Resolver::New(isolate);
-	
+	auto resolver = v8::Promise::Resolver::New(isolate);
+
 	pvv.Reset(isolate, resolver);
 
 	v8::Local<v8::Promise::Resolver> local = v8::Local<v8::Promise::Resolver>::New(isolate, pvv);
 
-
 	args.GetReturnValue().Set(local->GetPromise());
+}
+
+
+class Promise
+{
+
+	v8::Persistent<v8::Promise::Resolver> resolver;
+
+public:
+
+	Promise(v8::FunctionCallback callback)
+	{
+
+
+
+	}
+
+
+
+};
+
+
+namespace jsiv8
+{
+
+	jsiv8::js_object CreateSiv3D() {
+
+
+		auto siv3d = jsiv8::js_object();
+
+
+		auto isolate = v8::Isolate::GetCurrent();
+
+
+		siv3d[L"clearPrint"] = v8::FunctionTemplate::New(
+			isolate,
+			[](const v8::FunctionCallbackInfo<v8::Value> &args)
+		{
+
+			s3d::ClearPrint();
+
+		});
+
+
+
+		siv3d[L"println"] = v8::FunctionTemplate::New(
+			isolate,
+			[](const v8::FunctionCallbackInfo<v8::Value> &args)
+		{
+
+			int size = args.Length();
+
+			s3d::String result;
+
+			for (int i = 0; i < size; ++i)
+			{
+
+				result += FormatV8(args[i]);
+
+			}
+
+
+
+			// MessageBox::Show(result);
+
+			Println(result);
+
+
+
+			args.GetReturnValue().SetUndefined();
+
+		});
+
+
+
+
+
+
+
+		return siv3d;
+
+	}
 
 }
 
 
-
 void Main()
 {
+
 
 
 
@@ -488,24 +475,66 @@ void Main()
 
 	JavaScript js;
 
-	Window::SetTitle(L"Siv3D App - V8 ", js.version);
+
+	js.define()[L"siv3d"] = jsiv8::CreateSiv3D();
 
 
-	//	js.root()[L"siv3d"] = jsiv8::JS_Object();
 
 	const auto js_system = v8::ObjectTemplate::New(js.isolate);
 
+
+	auto obj = jsiv8::js_object();
+
+	obj[L"test"] = 12.0;
+
+
+	js.define()[L"t"] = obj;
+
+	/*
 	js.globalObject->Set(
 		ToStringV8(L"system"),
 		js_system);
+	*/
 
-
-
+	js.define()[L"system"] = js_system;
 
 
 	js_system->Set(
 		ToStringV8(L"update"),
 		v8::FunctionTemplate::New(js.isolate, PPP));
+
+	/*
+
+
+	js.define()[L"test"] = 123;
+
+	//js.define()[L"test2"] = true;
+
+
+	// js.define()[L"test3"] = L"aaa";
+
+	js.define()[L"func"] =
+
+
+
+	*/
+
+
+	/*
+	int i = 0;
+
+	js.define()[L"func"] = (FunctionCallback)([i](const v8::FunctionCallbackInfo<v8::Value> &args)
+	{
+
+		CL(L"1");
+
+		args.GetReturnValue().SetNull();
+	});
+
+	*/
+
+
+
 
 
 
@@ -514,19 +543,10 @@ void Main()
 
 
 
-
-	// v8::V8::TerminateExecution(js.isolate);
-	// auto func = v8::Local<v8::Promise>::Cast(js.global()[L"system"][L"update"].value);
-	// CL(js.global()[L"system"][L"update"].value->IsPromise());
-	// func->Resolve(ToBooleanV8(false));
-	// PR->Resolve(ToBooleanV8(true));
-
-
-
-
 	js.global()[L"siv3d"][L"main"](L"test");
 
 
+	Window::SetTitle(L"Siv3D App - V8 ", js.version);
 
 	while (System::Update())
 	{
@@ -543,14 +563,15 @@ void Main()
 			js.global()[L"siv3d"].set(L"frameCount", ToNumberV8(System::FrameCount()));
 
 			aa->Resolve(ToBooleanV8(true));
-
+			pvv.Reset();
 			//v8::Undefined(js.isolate));
-			Isolate::GetCurrent()->RunMicrotasks();
+
+			v8::Isolate::GetCurrent()->RunMicrotasks();
 
 			//Println(L"Resolve", aa.IsEmpty());
 
 
-			//pvv.Reset();
+			//
 		}
 
 
