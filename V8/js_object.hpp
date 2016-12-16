@@ -1,6 +1,6 @@
 #pragma once
 
-namespace jsiv8
+namespace JS
 {
 
 

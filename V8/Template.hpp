@@ -78,7 +78,7 @@ struct JS_Template_Reference
 
 
 
-		template<>
+	template<>
 	void operator=<jsiv8::js_object>(const jsiv8::js_object &value)
 	{
 

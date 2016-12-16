@@ -1,5 +1,10 @@
 #pragma once
 
+
+#define JS jsiv8
+
+
+
 # include <Siv3D.hpp>
 
 #pragma comment(lib,"v8.dll.lib")
@@ -10,7 +15,7 @@
 #include "include/v8.h"
 
 
-#include "CV8Initializer.hpp"
+#include "Allocator.hpp"
 
 #include <stdio.h>
 #include <iostream>
@@ -75,26 +80,6 @@ public:
 	{
 		return this->_platform;
 	};
-
-	/*
-
-	A2 GetGlobal()
-	{
-		return (this->context->Global());
-	}
-
-
-	__declspec(property(get = GetGlobal)) A2 global;
-	*/
-	/*
-	jsiv8::JS_Value root() const
-	{
-		const jsiv8::JS_Object root;
-		return root;
-	}
-	*/
-	
-
 
 
 	void initialize()
@@ -174,13 +159,9 @@ public:
 
 
 
-
-
-
 		this->globalObject = global;
 		this->siv3d = globalS3d;
 
-		g::isolate = isolate;
 
 	}
 

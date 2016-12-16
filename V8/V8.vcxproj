@@ -253,6 +253,7 @@
     <None Include="Example\Test.json" />
     <None Include="Example\Well\Well.mtl" />
     <None Include="Example\Well\Well.wavefrontobj" />
+    <None Include="JavaScript2.hpp" />
     <None Include="test.js" />
   </ItemGroup>
   <ItemGroup>
@@ -283,7 +284,7 @@
     <Font Include="Example\YomogiFont.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CV8Initializer.hpp" />
+    <ClInclude Include="Allocator.hpp" />
     <ClInclude Include="js_function.hpp" />
     <ClInclude Include="js_object.hpp" />
     <ClInclude Include="Template.hpp" />

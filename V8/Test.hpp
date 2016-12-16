@@ -10,7 +10,6 @@
 #include "include/v8.h"
 
 
-#include "CV8Initializer.hpp"
 
 #include <stdio.h>
 #include <iostream>
@@ -25,11 +24,6 @@ namespace NS_JS
 {
 	v8::Local<v8::Context> context;
 }
-
-class JS
-{
-
-};
 
 #include <type_traits>
 
@@ -132,7 +126,6 @@ public:
 	A2()
 	{
 		// if (jsiv8::GET) CL(L"const");
-		if (jsiv8::GET) CL(L"const3");
 
 		this->initialized = false;
 	}
@@ -147,7 +140,6 @@ public:
 
 	A2(const v8::Local<v8::Value> &value)
 	{
-		if (jsiv8::GET) CL(L"const2");
 
 		this->value = value;
 	}
