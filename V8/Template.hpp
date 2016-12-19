@@ -134,7 +134,7 @@ struct JS_Template_Reference
 
 
 	template< >
-	void operator=<FunctionCallback>(const FunctionCallback &value)
+	void operator=<v8::FunctionCallback>(const v8::FunctionCallback &value)
 	{
 
 		const auto isolate = v8::Isolate::GetCurrent();
@@ -185,7 +185,7 @@ public:
 
 
 
-	void set(s3d::String name, Local<Data> value)
+	void set(s3d::String name, v8::Local<v8::Data> value)
 	{
 
 		this->_data->Set(ToStringV8(name), value);
@@ -210,7 +210,7 @@ public:
 
 
 
-	void set(s3d::String name, FunctionCallback fn)
+	void set(s3d::String name, v8::FunctionCallback fn)
 	{
 
 		const auto isolate = v8::Isolate::GetCurrent();

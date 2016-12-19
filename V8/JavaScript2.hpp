@@ -57,8 +57,6 @@
 #include "StartupData.hpp"
 
 
-using namespace v8;
-
 
 
 template <class ... Args>

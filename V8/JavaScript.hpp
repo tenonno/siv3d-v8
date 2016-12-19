@@ -201,7 +201,7 @@ public:
 	JavaScript(const JS::StartupData &snapshot = JS::StartupData::Default)
 	{
 
-		V8::InitializeICU();
+		v8::V8::InitializeICU();
 
 		this->setSnapshot(snapshot);
 
@@ -216,8 +216,8 @@ public:
 		this->_aaa.reset(v8::platform::CreateDefaultPlatform());
 
 		
-		V8::InitializePlatform(this->_aaa.get());
-		V8::Initialize();
+		v8::V8::InitializePlatform(this->_aaa.get());
+		v8::V8::Initialize();
 
 		this->initialize();
 
@@ -259,19 +259,19 @@ public:
 
 		//isolate->Enter();
 
-		Local<v8::String> sourcev8 = ToStringV8(source);
+		v8::Local<v8::String> sourcev8 = ToStringV8(source);
 
 
 		//	const auto isolate = Isolate::GetCurrent();
 
-		Local<Context> context = this->context;//Context::New(isolate);
+		v8::Local<v8::Context> context = this->context;//Context::New(isolate);
 		
 		
 		// v8::Context::Scope context_scope(context);
 
 		//const auto context = isolate->GetCurrentContext();
 
-		TryCatch try_catch(isolate);
+		v8::TryCatch try_catch(isolate);
 
 
 		// Local<v8::Script> script = v8::Script::Compile(context, source).ToLocalChecked();
@@ -279,7 +279,7 @@ public:
 
 
 		// Compile the script and check for errors.
-		Local<v8::Script> compiled_script;
+		v8::Local<v8::Script> compiled_script;
 
 
 
@@ -300,7 +300,7 @@ public:
 
 
 		// Run the script!
-		Local<Value> cresult;
+		v8::Local<v8::Value> cresult;
 		if (!compiled_script->Run(context).ToLocal(&cresult)) {
 			// The TryCatch above is still in effect and will have caught the error.
 
@@ -380,8 +380,8 @@ public:
 
 		this->context->Exit();
 
-		V8::Dispose();
-		V8::ShutdownPlatform();
+		v8::V8::Dispose();
+		v8::V8::ShutdownPlatform();
 		
 		// delete this->platform;
 

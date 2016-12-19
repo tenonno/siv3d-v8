@@ -203,7 +203,7 @@ public:
 	{
 
 
-		v8::Local<v8::Context> context = Isolate::GetCurrent()->GetCurrentContext();
+		v8::Local<v8::Context> context = ISOLATE->GetCurrentContext();
 
 
 		// auto a = v8::Local<v8::Function>::Cast(this->value)->GetName()->ToString();
@@ -260,7 +260,7 @@ public:
 		// GetCurrent: 現在のスレッドの Isolate を取得する
 		// GetCurrentContext: 実行中のコンテキストを取得する
 
-		v8::Local<v8::Context> context = Isolate::GetCurrent()->GetCurrentContext();
+		v8::Local<v8::Context> context = ISOLATE->GetCurrentContext();
 		
 	
 		// auto a = v8::Local<v8::Function>::Cast(this->value)->GetName()->ToString();

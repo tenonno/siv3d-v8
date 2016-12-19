@@ -66,7 +66,7 @@ namespace JS
 
 
 
-		virtual void set(s3d::String name, Local<Data> value)
+		virtual void set(s3d::String name, v8::Local<v8::Data> value)
 		{
 
 		};
@@ -109,7 +109,7 @@ namespace JS
 
 
 
-		void set(s3d::String name, Local<Data> value) override
+		void set(s3d::String name, v8::Local<v8::Data> value) override
 		{
 
 
