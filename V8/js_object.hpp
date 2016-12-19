@@ -66,7 +66,7 @@ namespace JS
 
 
 
-		virtual void set(s3d::String name, v8::Local<v8::Data> value)
+		virtual void set(s3d::String _name, v8::Local<v8::Data> value)
 		{
 
 		};
@@ -102,20 +102,20 @@ namespace JS
 
 		}
 
-		js_object_base operator[](const s3d::String &name)
+		js_object_base operator[](const s3d::String &_name)
 		{
-			return js_object_base(name, this, &this->object);
+			return js_object_base(_name, this, &this->object);
 		}
 
 
 
-		void set(s3d::String name, v8::Local<v8::Data> value) override
+		void set(s3d::String _name, v8::Local<v8::Data> value) override
 		{
 
 
 			this->object->Set(
 
-				ToStringV8(name),
+				ToStringV8(_name),
 				value
 
 			);

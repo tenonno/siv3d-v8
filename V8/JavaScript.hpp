@@ -2,390 +2,488 @@
 
 
 
-
-
-# include <Siv3D.hpp>
-
 #include "include/v8.h"
 
-
-#include "Allocator.hpp"
 
 #include <stdio.h>
 #include <iostream>
 #include <string>
+#include <type_traits>
+#include <unordered_map>
 
 
-#include "include/libplatform/libplatform.h"
-#include "include/v8.h"
+
+
+// 名前（仮）
+// JS + Siv + V8 = jsiv8
+#define JS jsiv8
+
+
+
+#ifdef _WIN64
+
+#pragma comment(lib, "v8.dll.lib")
+#pragma comment(lib, "v8_libbase.dll.lib")
+#pragma comment(lib, "v8_libplatform.dll.lib")
+
+#else
+
+#endif
+
+
+// スナップショットのリソース番号
+#define V8_X64_NATIVES_BLOB  8000
+#define V8_X64_SNAPSHOT_BLOB 8001
+
+
+#ifdef _WIN64
+
+#define V8_NATIVES_BLOB  V8_X64_NATIVES_BLOB
+#define V8_SNAPSHOT_BLOB V8_X64_SNAPSHOT_BLOB
+
+#else
+
+#endif
+
+
+
+
+
+
+
+#include "StartupData.hpp"
+
+
+
+
+template <class ... Args>
+inline void CL(const Args& ... args)
+{
+	MessageBox::Show(Format(args...));
+}
+
+
+
+#include <thread>
+
+
+// namespace Cast
+
+#define ISOLATE v8::Isolate::GetCurrent()
+
+
+inline v8::Local<v8::String> ToStringV8(const s3d::String &string)
+{
+
+	const auto isolate = v8::Isolate::GetCurrent();
+
+
+	return v8::String::NewFromTwoByte(
+		isolate,
+		reinterpret_cast<const uint16 *>(string.c_str()));
+
+}
+
+
+#include "ToV8.hpp"
+
+
+
+
+#define _CRT_SECURE_NO_WARNINGS
+
+
+
+#include <windows.h>
+
+#undef MessageBox
+
+
+#pragma warning(disable : 4996)
+
+
+inline s3d::String FromV8UTF8(const v8::String::Utf8Value &value)
+{
+
+	return s3d::CharacterSet::FromUTF8(*value);
+
+
+}
+
+inline s3d::String FromV8UTF8(const v8::Local<v8::String> &string)
+{
+
+	return FromV8UTF8(v8::String::Utf8Value(string));
+}
+
+
+
+struct Text
+{
+	s3d::String text;
+	s3d::Color color;
+};
+
+
+s3d::String FormatV8(const v8::Local<v8::Value> &value)
+{
+
+	if (value->IsUndefined())
+	{
+		return L"undefined";
+	}
+
+	if (value->IsBoolean())
+	{
+		return value->ToBoolean()->Value() ? L"true" : L"false";
+	}
+
+	if (value->IsString())
+	{
+		return FromV8UTF8(value->ToString());
+	}
+
+	if (value->IsNumber())
+	{
+
+		return Format(value->ToNumber()->Value());
+
+	}
+
+
+	if (value->IsObject())
+	{
+
+		return FromV8UTF8(value->ToObject()->ObjectProtoToString());
+
+	}
+
+	if (value->IsNull()) {
+		return L"null";
+	}
+
+	return L"?";
+
+}
+
+
+
+namespace JS
+{
+
+
+	class JS_Object
+	{
+		std::unordered_map<s3d::String, JS_Object *> properties;
+
+
+		JS_Object *parent;
+
+	public:
+
+
+		virtual JS_Object *toPointer()
+		{
+
+
+		}
+
+
+	};
+
+
+
+	/*
+	class JS_Value
+	{
+
+	s3d::Array<JS_Value *> properties;
+
+	public:
+
+	JS_Object operator[](const s3d::String &name)
+	{
+
+	const auto obj = JS_Object();
+	return obj;
+	}
+
+	};
+
+
+
+
+	class JS_Object : public JS_Value
+	{
+
+
+
+
+	public:
+
+	v8::Local<v8::ObjectTemplate> toJS()
+	{
+
+	}
+
+
+
+
+
+	};
+
+	*/
+
+
+
+	v8::Local<v8::Context> context;
+
+
+	struct CompileResult
+	{
+
+
+
+	};
+
+
+
+
+
+
+
+}
+
+#include "Test.hpp"
+
+
+#include <future>
+
 
 #include <sstream>
 
 
-#include "js_object.hpp"
-#include "js_function.hpp"
-#include "Template.hpp"
 
-class JavaScript
+template<class T>
+class Instance
 {
 
-private:
+	T instance;
 
-	v8::Isolate *_isolate = nullptr;
-
-	s3d::String _version;
-
-
-	v8::Platform *_platform = nullptr;
-
-
-	std::unique_ptr<v8::Platform> _aaa;
-
-
-
-	v8::Local<v8::Context> _context;
-
-	std::unique_ptr<Instance<v8::HandleScope>> _scope;
-
-
-	A2 _global;
 
 public:
 
-	using Scope = v8::Context::Scope;
-
-	Property_Get(v8::Local<v8::Context>, context) const
-	{
-		return this->_context;
-	};
-
-
-	Property_Get(v8::Isolate *, isolate) const
-	{
-		return this->_isolate;
-	};
-
-	Property_Get(s3d::String, version) const
-	{
-		return this->_version;
-	};
-
-	Property_Get(v8::Platform *, platform) const
-	{
-		return this->_platform;
-	};
-
-
-	void initialize()
+	template<class ...Types>
+	Instance(Types&&... args) : instance(std::forward<Types>(args)...)
 	{
 
+	}
 
-		v8::Isolate::CreateParams create_params;
+};
 
-
-		create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
-
-
-		auto isolate = v8::Isolate::New(create_params);
-
-		isolate->Enter();
+#include "Function.hpp"
 
 
-
-		/*
-		using wss = std::wstringstream;
-		const auto this_id = static_cast<wss &>(wss() << std::this_thread::get_id()).str();
-		Println(L"thread-id: ", this_id);
-		*/
-
-
-		// Isolate を現在のスレッドに割り当てる
-
-		// Isolate::Scope isolate_scope(isolate);
-
-		// v8::HandleScope scope(isolate);
-
-
-
-		this->_scope = std::make_unique<Instance<v8::HandleScope>>(isolate);
-		
-
-
-		//this->___scope = v8::HandleScope(isolate);
-
-		this->_isolate = isolate;
-
-
-		//v8::Unlocker locker(this->isolate);
-
-		// CL(locker.IsLocked(this->isolate));
-
-
-
-		// this->initialize_isolate();
-
-
-
-		this->_version = Widen(v8::V8::GetVersion());
-
-
-
-		v8::Local<v8::ObjectTemplate> global = v8::ObjectTemplate::New(this->isolate);
-
-
-		v8::Local<v8::ObjectTemplate> globalS3d = v8::ObjectTemplate::New(this->isolate);
-
-		/*
-		global->Set(
-			v8::String::NewFromUtf8(this->isolate, "siv3d", v8::NewStringType::kNormal)
-			.ToLocalChecked(),
-			globalS3d);
-
-		*/
+#include "JavaScriptCore.hpp"
 
 
 
 
+class Promise
+{
 
+	v8::Persistent<v8::Promise::Resolver> resolver;
 
+public:
 
+	Promise(v8::FunctionCallback callback)
+	{
 
-
-
-
-		this->globalObject = global;
-		this->siv3d = globalS3d;
 
 
 	}
 
-
-	JS_Template define()
-	{
-		return JS_Template(this->globalObject);
-	}
-
-
-	v8::Local<v8::ObjectTemplate> globalObject;
-	v8::Local<v8::ObjectTemplate> siv3d;
-
-	A2 __GLOBAL;
-
-
-
-	A2 global()
-	{
-		return this->__GLOBAL.value;
-	}
-
-	std::unique_ptr<JS::StartupDataBlob> nativesDataBlob;
-	std::unique_ptr<JS::StartupDataBlob> snapshotDataBlob;
-
-	void setSnapshot(const JS::StartupData &snapshot)
-	{
-
-		this->nativesDataBlob =
-			std::move(std::make_unique<JS::StartupDataBlob>(snapshot.natives_blob));
-
-		this->snapshotDataBlob =
-			std::move(std::make_unique<JS::StartupDataBlob>(snapshot.snapshot_blob));
-
-
-		v8::V8::SetNativesDataBlob(this->nativesDataBlob->get());
-		v8::V8::SetSnapshotDataBlob(this->snapshotDataBlob->get());
-
-	}
-
-
-
-	JavaScript(const JS::StartupData &snapshot = JS::StartupData::Default)
-	{
-
-		v8::V8::InitializeICU();
-
-		this->setSnapshot(snapshot);
-
-		// V8::InitializeExternalStartupData("./");
-		
-		// v8::V8::SetNativesDataBlob()
-
-
-		// this->_platform = v8::platform::CreateDefaultPlatform();
-
-
-		this->_aaa.reset(v8::platform::CreateDefaultPlatform());
-
-		
-		v8::V8::InitializePlatform(this->_aaa.get());
-		v8::V8::Initialize();
-
-		this->initialize();
-
-
-	}
-
-	s3d::String compile(const s3d::String &source)
-	{
-
-
-		// JS を実行するコンテキストを生成する
-		v8::Local<v8::Context> context1 = v8::Context::New(this->isolate, nullptr, this->globalObject);
-
-
-		context1->Enter();
-
-
-		// new C_B(this->context);
-		// new C_B(this->context);
-		// v8::Context::Scope context_scope(context);
-
-
-		this->_context = context1;
-
-
-
-
-		this->_global = A2(context->Global());
-		this->_global.context_ptr = context1;
-
-		this->__GLOBAL = A2(context->Global());
-
-
-
-		auto isolate = this->isolate;
-
-
-		s3d::String result;
-
-		//isolate->Enter();
-
-		v8::Local<v8::String> sourcev8 = ToStringV8(source);
-
-
-		//	const auto isolate = Isolate::GetCurrent();
-
-		v8::Local<v8::Context> context = this->context;//Context::New(isolate);
-		
-		
-		// v8::Context::Scope context_scope(context);
-
-		//const auto context = isolate->GetCurrentContext();
-
-		v8::TryCatch try_catch(isolate);
-
-
-		// Local<v8::Script> script = v8::Script::Compile(context, source).ToLocalChecked();
-
-
-
-		// Compile the script and check for errors.
-		v8::Local<v8::Script> compiled_script;
-
-
-
-		if (!v8::Script::Compile(context, sourcev8).ToLocal(&compiled_script)) {
-			v8::String::Utf8Value error(try_catch.Exception());
-
-			return FromV8UTF8(error);
-
-		}
-		/*
-		// terminate script in 5 seconds
-		v8::Concurrency::create_task([isolate]
-		{
-			Concurrency::wait(5000);
-			v8::V8::TerminateExecution(isolate);
-		});
-		*/
-
-
-		// Run the script!
-		v8::Local<v8::Value> cresult;
-		if (!compiled_script->Run(context).ToLocal(&cresult)) {
-			// The TryCatch above is still in effect and will have caught the error.
-
-			v8::String::Utf8Value error(try_catch.Exception());
-			// Running the script failed; bail out.			
-			//			CL(Widen(*error));
-
-			result = Widen(UTF8toSjis(*error));
-
-			CL(result);
-
-		}
-		else
-		{
-
-			//auto a = *cresult;
-
-
-
-			/*
-			std::wstring inputwstr = L"太郎は次郎が持っている本を花子に渡した。";
-			const wchar_t *inputw = inputwstr.c_str();
-			char input[1024];
-			wcstombs(input, inputw, sizeof(wchar_t)*int(inputwstr.size()));
-			std::cout << "INPUT: " << input << std::endl;
-
-
-
-			v8::String::Utf8Value utf8(cresult);
-
-
-			::setlocale(LC_CTYPE, "jpn");
-
-			wchar_t ws[255];
-
-			int len = mbstowcs(ws, *utf8, 255);
-			*/
-
-			/*
-			wchar_t wc[100];
-			const char c[] = "あいうえお";
-			mbstowcs(wc, c, sizeof(c));
-			*/
-			/*
-
-			CL(len);
-			*/
-
-			// CL(utf8.length());
-
-
-			v8::String::Utf8Value utf8(cresult);
-
-			//CL(sizeof(*utf8));
-
-			result = FromV8UTF8(utf8);
-
-		}
-
-		//isolate->Enter();
-
-		// this->global[L"siv3d"][L"main"](123);
-
-		//		CL(result);
-		return result;
-
-
-
-		// CL(L"dead? ", isolate->IsDead())
-
-		//CL(Isolate::GetCurrent() == this->isolate);
-		//return Compile(source, isolate);//Isolate::GetCurrent());
-	}
-
-	~JavaScript()
-	{
-
-		this->context->Exit();
-
-		v8::V8::Dispose();
-		v8::V8::ShutdownPlatform();
-		
-		// delete this->platform;
-
-	}
 
 
 };
+
+
+namespace JS
+{
+
+}
+
+
+namespace JS
+{
+
+	Object CreateSiv3D() {
+
+		auto siv3d = Object();
+
+		auto isolate = ISOLATE;
+
+
+		siv3d[L"clearPrint"] = v8::FunctionTemplate::New(
+			isolate,
+			[](const v8::FunctionCallbackInfo<v8::Value> &args)
+		{
+
+			s3d::ClearPrint();
+
+		});
+
+
+
+		siv3d[L"println"] = v8::FunctionTemplate::New(
+			isolate,
+			[](const v8::FunctionCallbackInfo<v8::Value> &args)
+		{
+
+			int size = args.Length();
+
+			s3d::String result;
+
+			for (int i = 0; i < size; ++i)
+			{
+
+				if (result.length) result += L", ";
+
+				result += FormatV8(args[i]);
+
+			}
+
+
+
+			// MessageBox::Show(result);
+
+			s3d::Println(result);
+
+
+
+			args.GetReturnValue().SetUndefined();
+
+		});
+
+
+
+
+
+
+
+		return siv3d;
+
+	}
+
+}
+
+
+
+
+
+
+
+
+namespace JS
+{
+
+
+	void PromiseCallback(const v8::FunctionCallbackInfo<v8::Value> &args)
+	{
+	}
+
+
+
+	template<class T>
+	class Promise
+	{
+		std::function<T> callback;
+		v8::Persistent<v8::Promise::Resolver> resolver;
+
+	public:
+
+		Promise(const std::function<T> &func)
+			: callback(func)
+		{
+
+
+
+		}
+
+
+		void function(const v8::FunctionCallbackInfo<v8::Value> &args)
+		{
+
+			const auto isolate = args.GetIsolate();
+
+
+			this->resolver.Reset(
+				isolate,
+				v8::Promise::Resolver::New(isolate)
+			);
+
+			auto local = v8::Local<v8::Promise::Resolver>::New(isolate, this->resolver);
+
+			args.GetReturnValue().Set(local->GetPromise());
+
+		}
+
+
+
+		v8::Local<v8::FunctionTemplate> toV8()
+		{
+
+
+
+
+			auto promise = JS::PromiseResolver<void()>([]()
+			{
+
+				CL(L"1");
+
+			});
+
+
+
+			return v8::FunctionTemplate::New(
+				ISOLATE,
+				&promise.function
+			);
+		}
+
+
+		template<class T>
+		void resolve(const T &value)
+		{
+
+
+			const auto localResolver = v8::Local<v8::Promise::Resolver>::New(ISOLATE, this->resolver);
+
+			localResolver->Resolve(ToV8::Value(value));
+
+
+
+
+			this->resolver.Reset();
+		}
+
+
+	};
+
+
+	template<class T>
+	using PromiseResolver = Promise<T>;
+
+}
+
+
+
+namespace JS
+{
+
+	using Args = v8::FunctionCallbackInfo<v8::Value>;
+
+}
+
+
+

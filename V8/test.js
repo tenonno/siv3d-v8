@@ -8,7 +8,7 @@ siv3d.main = async (...args) => {
 
         siv3d.setBackgroundHue(siv3d.frameCount);
        
-        siv3d.println(siv3d.frameCount);
+        siv3d.println(args[0], '‚ ‚¢‚¤‚¦‚¨Š¿Žš', siv3d.frameCount);
 
     }
 

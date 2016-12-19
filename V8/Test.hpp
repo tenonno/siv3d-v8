@@ -20,10 +20,6 @@
 #include "include/v8.h"
 
 
-namespace NS_JS
-{
-	v8::Local<v8::Context> context;
-}
 
 #include <type_traits>
 
@@ -58,7 +54,7 @@ ArrayValueV8 func2(const double t)
 
 	ArrayValueV8 result;
 
-	result.emplace_back(ToNumberV8(t));
+	result.emplace_back(JS::ToV8::Number(t));
 
 	return result;
 }
@@ -76,7 +72,7 @@ ArrayValueV8 func2(const int value)
 template<>
 ArrayValueV8 func2(const bool value)
 {
-	return ArrayValueV8{ ToBooleanV8(value) };
+	return ArrayValueV8{ JS::ToV8::Boolean(value) };
 }
 
 

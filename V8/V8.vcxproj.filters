@@ -84,9 +84,6 @@
     <ClCompile Include="Main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="JavaScript.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="StartupData.cpp">
       <Filter>ソース ファイル\JS</Filter>
     </ClCompile>
@@ -336,7 +333,7 @@
     <None Include="test.js">
       <Filter>ソース ファイル</Filter>
     </None>
-    <None Include="JavaScript2.hpp">
+    <None Include="JavaScript.hpp">
       <Filter>ソース ファイル\JS</Filter>
     </None>
   </ItemGroup>
@@ -413,9 +410,6 @@
     <ClInclude Include="Test.hpp">
       <Filter>ソース ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="JavaScript.hpp">
-      <Filter>ソース ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="Template.hpp">
       <Filter>ソース ファイル</Filter>
     </ClInclude>
@@ -433,6 +427,12 @@
     </ClInclude>
     <ClInclude Include="Function.hpp">
       <Filter>ソース ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="JavaScriptCore.hpp">
+      <Filter>ソース ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ToV8.hpp">
+      <Filter>ソース ファイル\JS</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

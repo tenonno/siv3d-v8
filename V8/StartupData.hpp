@@ -20,7 +20,7 @@ namespace JS
 		{
 
 
-			this->data.raw_size = this->buffer.size();
+			this->data.raw_size = static_cast<int>(this->buffer.size());
 			this->data.data = reinterpret_cast<const char *>(this->buffer.data());
 
 

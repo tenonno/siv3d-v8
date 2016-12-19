@@ -6,13 +6,13 @@
 
 inline v8::Local<v8::Value> to_v8_value(const double value)
 {
-	return ToV8::Number(value);
+	return JS::ToV8::Number(value);
 }
 
 
 inline v8::Local<v8::Value> to_v8_value(const int value)
 {
-	return ToV8::Number(value);
+	return JS::ToV8::Number(value);
 }
 
 inline v8::Local<v8::Value> to_v8_value(const s3d::String &value)
@@ -30,7 +30,7 @@ inline v8::Local<v8::Value> to_v8_value(const wchar *value)
 
 inline v8::Local<v8::Value> to_v8_value(const bool value)
 {
-	return ToBooleanV8(value);
+	return JS::ToV8::Boolean(value);
 }
 
 
@@ -85,7 +85,7 @@ struct JS_Template_Reference
 
 		(*this->ot)->Set(
 
-			ToV8::String(this->_name),
+			JS::ToV8::String(this->_name),
 			value.toV8()
 
 		);
@@ -117,7 +117,6 @@ struct JS_Template_Reference
 
 		this->this_object_template = value;
 
-		const auto isolate = v8::Isolate::GetCurrent();
 
 		(*this->ot)->Set(
 
