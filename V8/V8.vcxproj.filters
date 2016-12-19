@@ -84,9 +84,6 @@
     <ClCompile Include="Main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="test.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="JavaScript.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
