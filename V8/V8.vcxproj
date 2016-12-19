@@ -167,7 +167,6 @@
     <ClCompile Include="JavaScript.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="StartupData.cpp" />
-    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
