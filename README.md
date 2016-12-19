@@ -1,1 +1,1 @@
-# Siv3D で JavaScript を使おう！（仮）
+# Siv3D JavaScript
