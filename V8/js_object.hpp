@@ -26,7 +26,11 @@ namespace JS
 		}
 
 
+		js_object_base(const s3d::String &name, js_object_base *parent, v8::Local<v8::ObjectTemplate> *obj)
+			: name(name), parent(parent), object(obj)
+		{
 
+		}
 
 
 		template<class T>
@@ -48,6 +52,18 @@ namespace JS
 
 			return value;
 		}
+
+
+		v8::Local<v8::ObjectTemplate> *object;
+
+		void operator=(const JS::Function &value)
+		{
+			(*this->object)->Set(
+				ToV8::String(this->name),
+				value.toV8()
+			);
+		}
+
 
 
 		virtual void set(s3d::String name, Local<Data> value)
@@ -88,7 +104,7 @@ namespace JS
 
 		js_object_base operator[](const s3d::String &name)
 		{
-			return js_object_base(name, this);
+			return js_object_base(name, this, &this->object);
 		}
 
 
@@ -111,5 +127,6 @@ namespace JS
 
 	};
 
+	using Object = js_object;
 
 }

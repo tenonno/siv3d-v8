@@ -1,16 +1,10 @@
 #pragma once
 
 
-#define JS jsiv8
 
 
 
 # include <Siv3D.hpp>
-
-#pragma comment(lib,"v8.dll.lib")
-#pragma comment(lib,"v8_libbase.dll.lib")
-#pragma comment(lib,"v8_libplatform.dll.lib")
-
 
 #include "include/v8.h"
 
@@ -98,11 +92,11 @@ public:
 
 
 
-
+		/*
 		using wss = std::wstringstream;
 		const auto this_id = static_cast<wss &>(wss() << std::this_thread::get_id()).str();
 		Println(L"thread-id: ", this_id);
-
+		*/
 
 
 		// Isolate ‚ðŒ»Ý‚ÌƒXƒŒƒbƒh‚ÉŠ„‚è“–‚Ä‚é
@@ -184,15 +178,41 @@ public:
 		return this->__GLOBAL.value;
 	}
 
-	JavaScript()
+	std::unique_ptr<JS::StartupDataBlob> nativesDataBlob;
+	std::unique_ptr<JS::StartupDataBlob> snapshotDataBlob;
+
+	void setSnapshot(const JS::StartupData &snapshot)
+	{
+
+		this->nativesDataBlob =
+			std::move(std::make_unique<JS::StartupDataBlob>(snapshot.natives_blob));
+
+		this->snapshotDataBlob =
+			std::move(std::make_unique<JS::StartupDataBlob>(snapshot.snapshot_blob));
+
+
+		v8::V8::SetNativesDataBlob(this->nativesDataBlob->get());
+		v8::V8::SetSnapshotDataBlob(this->snapshotDataBlob->get());
+
+	}
+
+
+
+	JavaScript(const JS::StartupData &snapshot = JS::StartupData::Default)
 	{
 
 		V8::InitializeICU();
-		V8::InitializeExternalStartupData("./");
+
+		this->setSnapshot(snapshot);
+
+		// V8::InitializeExternalStartupData("./");
 		
+		// v8::V8::SetNativesDataBlob()
+
+
 		// this->_platform = v8::platform::CreateDefaultPlatform();
-		
-		
+
+
 		this->_aaa.reset(v8::platform::CreateDefaultPlatform());
 
 		
@@ -216,10 +236,7 @@ public:
 
 
 		// new C_B(this->context);
-
 		// new C_B(this->context);
-
-
 		// v8::Context::Scope context_scope(context);
 
 

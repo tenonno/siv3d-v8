@@ -19,7 +19,7 @@ template <std::size_t I, typename F, typename R = decltype(getArgsType<I>(&F::op
 
 
 
-namespace jsiv8
+namespace JS
 {
 
 

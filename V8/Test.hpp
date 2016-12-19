@@ -115,6 +115,8 @@ ArrayValueV8 func(const Rest&... rest)
 
 
 
+
+
 class A2
 {
 
@@ -197,6 +199,52 @@ public:
 	}
 
 
+	void operator()()
+	{
+
+
+		v8::Local<v8::Context> context = Isolate::GetCurrent()->GetCurrentContext();
+
+
+		// auto a = v8::Local<v8::Function>::Cast(this->value)->GetName()->ToString();
+
+
+
+		// CL(*context, Isolate::GetCurrent());
+
+		// auto context = this->context_ptr;
+
+		// CL(context.IsEmpty());
+
+		// v8::Context::Scope scope(context);
+
+		//v8::Context::Scope context_scope(context);
+
+
+		if (this->value.IsEmpty())
+		{
+			CL(L"IsEmpty");
+		}
+
+
+		auto func = v8::Local<v8::Function>::Cast(this->value);
+
+		if (!func->IsFunction())
+		{
+
+			CL(L"not function");
+		}
+
+		v8::Local<v8::Value> argv[1] = {
+			v8::Undefined(ISOLATE)
+		};
+
+		func->Call(
+			context,
+			this->value, 0, argv);
+
+
+	}
 
 	template <class ... Args>
 	void operator()(const Args& ... args)

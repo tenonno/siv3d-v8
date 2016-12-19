@@ -1,9 +1,6 @@
 #pragma once
 
 
-#pragma comment(lib,"v8.dll.lib")
-#pragma comment(lib,"v8_libbase.dll.lib")
-#pragma comment(lib,"v8_libplatform.dll.lib")
 
 
 #include "include/v8.h"
@@ -20,6 +17,44 @@
 #include "include/libplatform/libplatform.h"
 #include "include/v8.h"
 
+// 名前（仮）
+// JS + Siv + V8 = jsiv8
+#define JS jsiv8
+
+
+
+#ifdef _WIN64
+
+#pragma comment(lib, "v8.dll.lib")
+#pragma comment(lib, "v8_libbase.dll.lib")
+#pragma comment(lib, "v8_libplatform.dll.lib")
+
+#else
+
+#endif
+
+
+// スナップショットのリソース番号
+#define V8_X64_NATIVES_BLOB  8000
+#define V8_X64_SNAPSHOT_BLOB 8001
+
+
+#ifdef _WIN64
+
+#define V8_NATIVES_BLOB  V8_X64_NATIVES_BLOB
+#define V8_SNAPSHOT_BLOB V8_X64_SNAPSHOT_BLOB
+
+#else
+
+#endif
+
+
+
+
+
+
+
+#include "StartupData.hpp"
 
 
 using namespace v8;
@@ -48,6 +83,21 @@ public:
 
 #define ISOLATE v8::Isolate::GetCurrent()
 
+
+inline v8::Local<v8::String> ToStringV8(const s3d::String &string)
+{
+
+	const auto isolate = v8::Isolate::GetCurrent();
+
+
+	return v8::String::NewFromTwoByte(
+		isolate,
+		reinterpret_cast<const uint16 *>(string.c_str()));
+
+}
+
+
+
 namespace ToV8
 {
 
@@ -62,6 +112,17 @@ namespace ToV8
 		return v8::Boolean::New(ISOLATE, value);
 	}
 
+	inline auto String(const s3d::String &value)
+	{
+		return ToStringV8(value);
+	}
+
+
+	template<class T>
+	inline auto Value(const T &value)
+	{
+		return to_v8_value(value);
+	}
 
 
 }
@@ -82,17 +143,7 @@ inline v8::Local<v8::Boolean> ToBooleanV8(const bool value)
 
 
 
-inline v8::Local<v8::String> ToStringV8(const s3d::String &string)
-{
 
-	const auto isolate = v8::Isolate::GetCurrent();
-
-
-	return v8::String::NewFromTwoByte(
-		isolate,
-		reinterpret_cast<const uint16 *>(string.c_str()));
-
-}
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -312,43 +363,12 @@ public:
 
 };
 
+#include "Function.hpp"
 
 
 #include "JavaScript.hpp"
 
 
-
-
-template<class T>
-class _V8_Promise
-{
-	std::function<T> callback;
-	v8::Persistent<v8::Promise::Resolver> _resolver;
-
-public:
-
-
-
-
-};
-
-
-v8::Persistent<v8::Promise::Resolver> pvv;
-
-void PPP(const v8::FunctionCallbackInfo<v8::Value> &args)
-{
-
-
-	const auto isolate = args.GetIsolate();
-
-	auto resolver = v8::Promise::Resolver::New(isolate);
-
-	pvv.Reset(isolate, resolver);
-
-	v8::Local<v8::Promise::Resolver> local = v8::Local<v8::Promise::Resolver>::New(isolate, pvv);
-
-	args.GetReturnValue().Set(local->GetPromise());
-}
 
 
 class Promise
@@ -376,16 +396,14 @@ namespace JS
 }
 
 
-namespace jsiv8
+namespace JS
 {
 
-	jsiv8::js_object CreateSiv3D() {
+	Object CreateSiv3D() {
 
+		auto siv3d = Object();
 
-		auto siv3d = jsiv8::js_object();
-
-
-		auto isolate = v8::Isolate::GetCurrent();
+		auto isolate = ISOLATE;
 
 
 		siv3d[L"clearPrint"] = v8::FunctionTemplate::New(
@@ -411,6 +429,8 @@ namespace jsiv8
 			for (int i = 0; i < size; ++i)
 			{
 
+				if (result.length) result += L", ";
+
 				result += FormatV8(args[i]);
 
 			}
@@ -419,7 +439,7 @@ namespace jsiv8
 
 			// MessageBox::Show(result);
 
-			Println(result);
+			s3d::Println(result);
 
 
 
@@ -438,3 +458,114 @@ namespace jsiv8
 	}
 
 }
+
+
+
+
+
+
+
+
+namespace JS
+{
+
+
+	void PromiseCallback(const v8::FunctionCallbackInfo<v8::Value> &args)
+	{
+	}
+
+
+
+	template<class T>
+	class Promise
+	{
+		std::function<T> callback;
+		v8::Persistent<v8::Promise::Resolver> resolver;
+
+	public:
+
+		Promise(const std::function<T> &func)
+			: callback(func)
+		{
+
+
+
+		}
+
+
+		void function(const v8::FunctionCallbackInfo<v8::Value> &args)
+		{
+
+			const auto isolate = args.GetIsolate();
+
+
+			this->resolver.Reset(
+				isolate,
+				v8::Promise::Resolver::New(isolate)
+			);
+
+			auto local = v8::Local<v8::Promise::Resolver>::New(isolate, this->resolver);
+
+			args.GetReturnValue().Set(local->GetPromise());
+
+		}
+
+
+
+		v8::Local<v8::FunctionTemplate> toV8()
+		{
+
+
+
+
+			auto promise = JS::PromiseResolver<void()>([]()
+			{
+
+				CL(L"1");
+
+			});
+
+
+
+			return v8::FunctionTemplate::New(
+				ISOLATE,
+				&promise.function
+			);
+		}
+
+
+		template<class T>
+		void resolve(const T &value)
+		{
+
+
+			const auto localResolver = v8::Local<v8::Promise::Resolver>::New(ISOLATE, this->resolver);
+
+			localResolver->Resolve(ToV8::Value(value));
+
+
+
+
+			this->resolver.Reset();
+		}
+
+
+	};
+
+
+	template<class T>
+	using PromiseResolver = Promise<T>;
+
+}
+
+
+
+namespace JS
+{
+
+	using Args = v8::FunctionCallbackInfo<v8::Value>;
+
+}
+
+
+

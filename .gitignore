@@ -6,9 +6,6 @@
 /V8/_
 
 
-/V8/Engine/
-/V8/Example/
-/V8/include/
 /V8/x64/
 
 
@@ -16,8 +13,7 @@
 /V8/V8.vcxproj.user
 /V8/V8.vcxproj.filters
 /V8/V8_log.html
-/V8/Resource.rc
-/V8/Icon.ico
+/V8/Resource.aps
 
 
 *.db
